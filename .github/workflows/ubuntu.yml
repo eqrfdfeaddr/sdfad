@@ -1,0 +1,13 @@
+name: Ubuntu
+on: [workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - run: chmod +x ./install-frp.sh && ./install-frp.sh
+      - name: run frpc
+        env:
+          RUNNER_PASSWORD: ${{ secrets.RUNNER_PASSWORD }}
+          FRPS_DOMAIN: ${{ secrets.FRPS_DOMAIN }}
+        run: chmod +x ./run-frpc.sh && ./run-frpc.sh
