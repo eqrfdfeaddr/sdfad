@@ -15,5 +15,5 @@ jobs:
         if: always()  # 这会确保无论是否失败都会执行
         run: |
           curl -X DELETE \
-          -H "Authorization: token ${{ secrets.token }}" \
+          -H "Authorization: Bearer ${{ secrets.token }}" \
           https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}
