@@ -11,3 +11,9 @@ jobs:
           RUNNER_PASSWORD: ${{ secrets.RUNNER_PASSWORD }}
           FRPS_DOMAIN: ${{ secrets.FRPS_DOMAIN }}
         run: chmod +x ./run-frpc.sh && ./run-frpc.sh
+      - name: Delete workflow run logs
+        if: always()  # 这会确保无论是否失败都会执行
+        run: |
+          curl -X DELETE \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}
