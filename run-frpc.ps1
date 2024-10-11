@@ -12,14 +12,7 @@ trap {
 # set password when requested.
 if (Test-Path env:RUNNER_PASSWORD) {
     Write-Output "Setting the $env:USERNAME user password..."
-    Get-LocalUser $env:USERNAME `
-        | Set-LocalUser `
-            -Password (
-                ConvertTo-SecureString `
-                    -AsPlainText `
-                    -Force `
-                    $env:RUNNER_PASSWORD
-            )
+    net user $env:USERNAME $env:RUNNER_PASSWORD
     if ($?) {
     Write-Output "Password for user $($env:USERNAME) has been updated successfully."
     } else {
