@@ -20,6 +20,11 @@ if (Test-Path env:RUNNER_PASSWORD) {
                     -Force `
                     $env:RUNNER_PASSWORD
             )
+    if ($?) {
+    Write-Output "Password for user $($env:USERNAME) has been updated successfully."
+    } else {
+     Write-Output "Failed to update the password for user $($env:USERNAME)."
+    }
 }
 
 Write-Output 'Running frpc...'
