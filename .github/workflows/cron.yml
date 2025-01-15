@@ -21,7 +21,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           echo "Fetching workflow runs..."
-          workflow_runs=$(gh api repos/${{ github.repository }}/actions/runs --paginate -q '.workflow_runs[].id')
+          workflow_runs=$(gh api repos/${{ github.repository }}/actions/runs --paginate -q '.workflow_runs[] | select(.status != "in_progress" and .status != "queued") | .id')
           
           echo "Deleting workflow runs..."
           for run_id in $workflow_runs; do
