@@ -18,7 +18,7 @@ jobs:
       # Step 2: Run a script to delete workflow runs
       - name: Delete Workflow Runs
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           echo "Fetching workflow runs..."
           workflow_runs=$(gh api repos/${{ github.repository }}/actions/runs --paginate -q '.workflow_runs[].id')
