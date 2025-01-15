@@ -1,0 +1,31 @@
+name: Cleanup Workflow Runs
+
+on:
+  schedule:
+    # 每日凌晨 3 点运行
+    - cron: '0 3 * * *'
+  workflow_dispatch: # 手动触发事件
+
+jobs:
+  cleanup-workflow-runs:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Run a script to delete workflow runs
+      - name: Delete Workflow Runs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fetching workflow runs..."
+          workflow_runs=$(gh api repos/${{ github.repository }}/actions/runs --paginate -q '.workflow_runs[].id')
+          
+          echo "Deleting workflow runs..."
+          for run_id in $workflow_runs; do
+            echo "Deleting run ID: $run_id"
+            gh api repos/${{ github.repository }}/actions/runs/$run_id -X DELETE
+          done
+          echo "Cleanup completed."
