@@ -2,7 +2,7 @@ name: Ubuntu_16003
 on: [workflow_dispatch]
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
       - run: chmod +x ./install-frp.sh && ./install-frp.sh
