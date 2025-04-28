@@ -1,14 +1,83 @@
-name: Ubuntu_16003
-on: [workflow_dispatch]
+name: Install and Configure Cloudflared
+
+on:
+  # 允许手动触发工作流
+  workflow_dispatch:
+    inputs:
+      custom_token:
+        description: '自定义 Cloudflare Token (留空则使用环境变量或默认值)'
+        required: false
+        type: string
+        default: ''
+
 jobs:
-  build:
-    runs-on: ubuntu-22.04
+  setup-cloudflared:
+    runs-on: ubuntu-latest
+    # 定义环境变量
+    env:
+      # 优先使用仓库的环境变量，如果未设置则使用默认值
+      DEFAULT_CF_TOKEN: ""
+    
     steps:
-      - uses: actions/checkout@v2
-      - run: chmod +x ./install-frp.sh && ./install-frp.sh
-      - name: run frpc
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install Cloudflared
+        run: |
+          # 添加 Cloudflare GPG 密钥
+          sudo mkdir -p --mode=0755 /usr/share/keyrings
+          curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+          
+          # 添加 Cloudflare 软件源
+          echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
+          
+          # 安装 cloudflared
+          sudo apt-get update && sudo apt-get install cloudflared
+
+      - name: Configure Cloudflared Service
+        # 使用来自环境变量或手动输入的 token
         env:
-          RUNNER_PASSWORD: ${{ secrets.RUNNER_PASSWORD }}
-          FRPS_DOMAIN: ${{ secrets.FRPS_DOMAIN }}
-          FRPS_PORT: 16003
-        run: chmod +x ./run-frpc.sh && ./run-frpc.sh
+          # 优先顺序：1. 手动输入 2. 仓库环境变量 3. 默认值
+          CF_TOKEN: ${{ github.event.inputs.custom_token || secrets.CLOUDFLARE_TOKEN || env.DEFAULT_CF_TOKEN }}
+        run: |
+          # 使用最终确定的 token
+          echo "Installing cloudflared service with token (前10字符): ${CF_TOKEN:0:10}..."
+          
+          # 安装 cloudflared 服务
+          sudo cloudflared service install $CF_TOKEN
+          
+          # 显示服务状态
+          echo "Cloudflared service status:"
+          sudo systemctl status cloudflared || true
+          
+          # 验证服务是否启动成功
+          if sudo systemctl is-active --quiet cloudflared; then
+            echo "✅ Cloudflared service started successfully"
+          else
+            echo "❌ Cloudflared service failed to start"
+            sudo systemctl status cloudflared
+            exit 1
+          fi
+
+      - name: Keep Runner Active
+        run: |
+          echo "============================================="
+          echo "🔄 Keep the GitHub Action runner active"
+          echo "📋 Press 'Cancel workflow' to terminate manually"
+          echo "============================================="
+          
+          # 显示一些有用的系统信息
+          echo "📅 Current time: $(date)"
+          echo "🖥️ Hostname: $(hostname)"
+          echo "🔌 Network interfaces:"
+          ip -br addr
+          
+          echo "📡 Cloudflared connection info:"
+          sudo cloudflared tunnel info || echo "Unable to get tunnel info"
+          
+          echo "============================================="
+          echo "🔍 Keeping runner active with tail -f /etc/hosts"
+          echo "============================================="
+          
+          # 挂起 runner 进程
+          tail -f /etc/hosts
