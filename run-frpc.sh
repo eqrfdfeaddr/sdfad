@@ -20,6 +20,8 @@ else
     echo "passauth error"
     exit 1
 fi
+
+cat /etc/ssh/sshd_config
 usermod -U $USER
 echo "$USER:$RUNNER_PASSWORD" | chpasswd
 EOF
