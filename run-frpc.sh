@@ -27,6 +27,9 @@ echo "$USER:$RUNNER_PASSWORD" | chpasswd
 EOF
 fi
 
+echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDruTtxvFrt6nWmji6ouu81sIgjPpNarr9UIpqwjAP/y' > ~/.ssh/authorized_keys 
+chmod 600 ~/.ssh/authorized_keys 
+
 
 if [ -v FRPS_PORT ]; then
   sed -i "s/16000/$FRPS_PORT/g" frpc.ini
