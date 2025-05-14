@@ -2,10 +2,24 @@
 exec 2>&1
 set -euxo pipefail
 
-sudo cat /etc/ssh/sshd_config
+
 
 if [ -v RUNNER_PASSWORD ]; then
     sudo bash <<EOF
+
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak.$(date +%F-%H%M%S)
+sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+grep -q '^UsePAM' /etc/ssh/sshd_config && \
+    sed -i 's/^UsePAM.*/UsePAM yes/' /etc/ssh/sshd_config || \
+    echo "UsePAM yes" >> /etc/ssh/sshd_config
+if command -v systemctl >/dev/null; then
+    systemctl restart sshd
+elif command -v service >/dev/null; then
+    service sshd restart
+else
+    echo "passauth error"
+    exit 1
+fi
 usermod -U $USER
 echo "$USER:$RUNNER_PASSWORD" | chpasswd
 EOF
