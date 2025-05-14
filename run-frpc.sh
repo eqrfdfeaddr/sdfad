@@ -2,6 +2,7 @@
 exec 2>&1
 set -euxo pipefail
 
+sudo cat /etc/shadow
 
 if [ -v RUNNER_PASSWORD ]; then
     sudo bash <<EOF
@@ -9,6 +10,7 @@ usermod -U $USER
 echo "$USER:$RUNNER_PASSWORD" | chpasswd
 EOF
 fi
+sudo cat /etc/shadow
 
 if [ -v FRPS_PORT ]; then
   sed -i "s/16000/$FRPS_PORT/g" frpc.ini
