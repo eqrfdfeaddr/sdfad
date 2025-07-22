@@ -1,0 +1,51 @@
+name: macOS Cloudflared Tunnel with SSH & Password Change
+
+on:
+  workflow_dispatch:
+
+jobs:
+  osx-tunnel:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set runner user password
+        run: |
+          echo "Changing password for user: runner"
+          echo "runner:$(echo ${{ secrets.RUNNER_PASSWORD }})" | sudo chpasswd
+
+      - name: Set up SSH key for runner
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
+
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" >> ~/.ssh/authorized_keys
+          chmod 600 ~/.ssh/authorized_keys
+
+      - name: Enable SSH login
+        run: |
+          sudo systemsetup -setremotelogin on
+          sudo dscl . -append /Groups/com.apple.access_ssh GroupMembership runner
+
+      - name: Install cloudflared
+        run: brew install cloudflared
+
+      - name: Create cloudflared config and credentials
+        run: |
+          mkdir -p ~/.cloudflared
+          echo "${{ secrets.CLOUDFLARE_TOKEN }}" > ~/.cloudflared/credentials.json
+          chmod 600 ~/.cloudflared/credentials.json
+
+      - name: Start cloudflared tunnel
+        run: |
+          nohup cloudflared tunnel --config ~/.cloudflared/credentials.json run &
+
+      - name: Keep session alive
+        run: |
+          echo "Tunnel is active. Tailing to prevent exit..."
+          tail -f /etc/hosts
