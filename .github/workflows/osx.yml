@@ -40,7 +40,7 @@ jobs:
 
       - name: Start cloudflared tunnel
         run: |
-          nohup cloudflared tunnel --config ~/.cloudflared/credentials.json run &
+          nohup cloudflared tunnel --token ${{ secrets.CLOUDFLARE_TOKEN }} run &
 
       - name: Keep session alive
         run: |
