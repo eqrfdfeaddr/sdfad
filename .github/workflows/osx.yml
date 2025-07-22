@@ -11,10 +11,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Set runner user password
+      - name: Set runner user password (macOS)
         run: |
           echo "Changing password for user: runner"
-          echo "runner:$(echo ${{ secrets.RUNNER_PASSWORD }})" | sudo chpasswd
+          sudo dscl . -passwd /Users/runner "${{ secrets.RUNNER_PASSWORD }}"
 
       - name: Set up SSH key for runner
         run: |
